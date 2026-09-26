@@ -4,7 +4,19 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>App Escoteiros - Sentinelas do Vale</title>
-    <script src="https://unpkg.com/pdf-lib@1.4.0/dist/pdf-lib.min.js"></script>
+
+    <!-- Instalação como aplicativo (Android e iPhone) -->
+    <link rel="manifest" href="manifest.json">
+    <meta name="theme-color" content="#003366">
+    <link rel="icon" type="image/png" sizes="32x32" href="img/favicon-32.png">
+    <link rel="apple-touch-icon" href="img/apple-touch-icon.png">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="default">
+    <meta name="apple-mobile-web-app-title" content="Sentinelas">
+
+    <!-- Biblioteca de PDF salva junto do app, para funcionar também sem internet -->
+    <script src="pdf-lib.min.js"></script>
     <style>
         :root {
             --azul-escoteiro: #003366; 
@@ -27,6 +39,43 @@
             box-shadow: 0 4px 15px rgba(0,0,0,0.1);
             max-width: 500px;
             width: 100%;
+            box-sizing: border-box;
+        }
+        @media (max-width: 480px) {
+            body { padding: 10px; }
+            .container { padding: 20px 15px; }
+        }
+        .cabecalho {
+            text-align: center;
+            margin-bottom: 10px;
+        }
+        .logo-eb {
+            height: 40px;
+            max-width: 100%;
+        }
+        .grupo {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 12px;
+            margin-top: 15px;
+            text-align: left;
+        }
+        .emblema {
+            width: 64px;
+            height: 64px;
+            flex-shrink: 0;
+        }
+        .grupo-nome {
+            font-size: 17px;
+            font-weight: bold;
+            color: var(--azul-escoteiro);
+            line-height: 1.25;
+        }
+        .grupo-local {
+            font-size: 13px;
+            color: #666;
+            margin-top: 3px;
         }
         h2 {
             color: var(--azul-escoteiro);
@@ -74,7 +123,8 @@
             color: #e74c3c;
         }
         .row { display: flex; gap: 10px; }
-        .row .form-group { flex: 1; }
+        .row .form-group { flex: 1; min-width: 0; }
+        .row .form-group.uf { flex: 0 0 70px; }
         .botoes { display: flex; gap: 10px; margin-top: 20px; }
         button {
             flex: 1;
@@ -94,6 +144,17 @@
 <body>
 
 <div class="container">
+    <div class="cabecalho">
+        <img class="logo-eb" src="img/logo-escoteiros-do-brasil.png" alt="Escoteiros do Brasil">
+        <div class="grupo">
+            <img class="emblema" src="img/emblema-sentinelas.png" alt="Emblema do Grupo Escoteiro Sentinelas do Vale">
+            <div>
+                <div class="grupo-nome">Grupo Escoteiro<br>Sentinelas do Vale</div>
+                <div class="grupo-local">Cachoeirinha - RS · 323/RS</div>
+            </div>
+        </div>
+    </div>
+
     <h2>Autorização de Atividade</h2>
     
     <div class="form-group">
@@ -152,7 +213,7 @@
                 <button class="btn-clear-field" onclick="limparUmCampo('cidade')">X</button>
             </div>
         </div>
-        <div class="form-group">
+        <div class="form-group uf">
             <label>UF</label>
             <div class="input-wrapper">
                 <input type="text" id="uf" maxlength="2">
@@ -218,6 +279,10 @@
 </div>
 
 <script>
+    if ('serviceWorker' in navigator) {
+        navigator.serviceWorker.register('sw.js');
+    }
+
     function limparUmCampo(idDoCampo) {
         document.getElementById(idDoCampo).value = '';
     }
