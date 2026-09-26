@@ -251,6 +251,48 @@
         return `${partes[2]}/${partes[1]}/${partes[0]}`;
     }
 
+    // Coordenadas medidas diretamente nas linhas do modelo 'autorizacao_atividade.pdf'
+    // (página A4 = 595 x 842 pontos, origem no canto inferior esquerdo).
+    // y = linha do formulário + 2, para o texto ficar "sentado" logo acima do traço.
+    // xFim = onde o traço termina; textos maiores diminuem a fonte para caber.
+    const CAMPOS_PDF = {
+        atividade:   { x: 26,  y: 708, xFim: 570, tamanho: 10 }, // linha abaixo de "membro do Movimento..."
+        local:       { x: 88,  y: 697, xFim: 570, tamanho: 9 },  // "localizada em:"
+        dataInicio:  { x: 420, y: 675, xFim: 485, tamanho: 9 },  // "a realizar-se entre os dias ____"
+        dataFim:     { x: 503, y: 675, xFim: 559, tamanho: 9 },  // "e ____"
+        saida:       { x: 60,  y: 664, xFim: 570, tamanho: 9 },  // "Saída:"
+        chegada:     { x: 78,  y: 653, xFim: 570, tamanho: 9 },  // "Chegada:"
+        custo:       { x: 141, y: 641, xFim: 300, tamanho: 9 }   // ao lado de "Custo individual da atividade:"
+    };
+
+    function escreverNoCampo(pagina, fonte, texto, campo) {
+        if (!texto) return;
+        const larguraMax = campo.xFim - campo.x;
+        let tamanho = campo.tamanho;
+        // Reduz a fonte até caber na linha (mínimo 6pt, ainda legível)
+        while (tamanho > 6 && fonte.widthOfTextAtSize(texto, tamanho) > larguraMax) {
+            tamanho -= 0.5;
+        }
+        // Se ainda assim não couber, corta o final com reticências
+        if (fonte.widthOfTextAtSize(texto, tamanho) > larguraMax) {
+            while (texto.length > 1 && fonte.widthOfTextAtSize(texto + '…', tamanho) > larguraMax) {
+                texto = texto.slice(0, -1);
+            }
+            texto = texto.trimEnd() + '…';
+        }
+        pagina.drawText(texto, { x: campo.x, y: campo.y, size: tamanho, font: fonte, color: PDFLib.rgb(0, 0, 0) });
+    }
+
+    function preencherPagina(pagina, fonte, dados) {
+        escreverNoCampo(pagina, fonte, dados.atividade, CAMPOS_PDF.atividade);
+        escreverNoCampo(pagina, fonte, dados.local_linha_unica, CAMPOS_PDF.local);
+        escreverNoCampo(pagina, fonte, dados.dataIn, CAMPOS_PDF.dataInicio);
+        escreverNoCampo(pagina, fonte, dados.dataFim, CAMPOS_PDF.dataFim);
+        escreverNoCampo(pagina, fonte, dados.saidaTexto, CAMPOS_PDF.saida);
+        escreverNoCampo(pagina, fonte, dados.chegadaTexto, CAMPOS_PDF.chegada);
+        escreverNoCampo(pagina, fonte, dados.custoTexto, CAMPOS_PDF.custo);
+    }
+
     async function gerarPDF() {
         const atividade = document.getElementById('atividade').value;
         const cidade = document.getElementById('cidade').value || '';
@@ -280,25 +322,10 @@
             const urlModelo = 'autorizacao_atividade.pdf'; 
             const modeloBytes = await fetch(urlModelo).then(res => res.arrayBuffer());
             const pdfDoc = await PDFLib.PDFDocument.load(modeloBytes);
-            const paginas = pdfDoc.getPages();
-            const pagina = paginas[0]; 
-
-            const tamanhoFonte = 10;
-            const corPreta = PDFLib.rgb(0, 0, 0);
-
-            // Mapeamento matemático final 
-            if(atividade) pagina.drawText(atividade, { x: 50, y: 708, size: tamanhoFonte, color: corPreta });
-            
-            // O X do endereço recuou de 130 para 90 para não cortar a linha no final
-            if(local_linha_unica) pagina.drawText(local_linha_unica, { x: 90, y: 694, size: 9, color: corPreta });
-            
-            // Subimos as posições Y baseando-nos no padrão de espaçamento do documento
-            if(dataIn) pagina.drawText(dataIn, { x: 390, y: 684, size: tamanhoFonte, color: corPreta });
-            if(dataFim) pagina.drawText(dataFim, { x: 470, y: 684, size: tamanhoFonte, color: corPreta });
-            
-            if(saidaTexto) pagina.drawText(saidaTexto, { x: 80, y: 672, size: tamanhoFonte, color: corPreta });
-            if(chegadaTexto) pagina.drawText(chegadaTexto, { x: 90, y: 660, size: tamanhoFonte, color: corPreta });
-            if(custoTexto) pagina.drawText(custoTexto, { x: 200, y: 648, size: tamanhoFonte, color: corPreta });
+            const fonte = await pdfDoc.embedFont(PDFLib.StandardFonts.Helvetica);
+            preencherPagina(pdfDoc.getPages()[0], fonte, {
+                atividade, local_linha_unica, dataIn, dataFim, saidaTexto, chegadaTexto, custoTexto
+            });
 
             const pdfBytes = await pdfDoc.save();
             const blob = new Blob([pdfBytes], { type: "application/pdf" });
