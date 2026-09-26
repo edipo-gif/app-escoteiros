@@ -286,16 +286,19 @@
             const tamanhoFonte = 10;
             const corPreta = PDFLib.rgb(0, 0, 0);
 
-            // Coordenadas calculadas minuciosamente com base no teu último PDF gerado
-            if(atividade) pagina.drawText(atividade, { x: 50, y: 712, size: tamanhoFonte, color: corPreta });
-            if(local_linha_unica) pagina.drawText(local_linha_unica, { x: 130, y: 698, size: 9, color: corPreta });
+            // Mapeamento matemático final 
+            if(atividade) pagina.drawText(atividade, { x: 50, y: 708, size: tamanhoFonte, color: corPreta });
             
-            if(dataIn) pagina.drawText(dataIn, { x: 410, y: 672, size: tamanhoFonte, color: corPreta });
-            if(dataFim) pagina.drawText(dataFim, { x: 490, y: 672, size: tamanhoFonte, color: corPreta });
+            // O X do endereço recuou de 130 para 90 para não cortar a linha no final
+            if(local_linha_unica) pagina.drawText(local_linha_unica, { x: 90, y: 694, size: 9, color: corPreta });
             
-            if(saidaTexto) pagina.drawText(saidaTexto, { x: 90, y: 660, size: tamanhoFonte, color: corPreta });
-            if(chegadaTexto) pagina.drawText(chegadaTexto, { x: 100, y: 648, size: tamanhoFonte, color: corPreta });
-            if(custoTexto) pagina.drawText(custoTexto, { x: 210, y: 636, size: tamanhoFonte, color: corPreta });
+            // Subimos as posições Y baseando-nos no padrão de espaçamento do documento
+            if(dataIn) pagina.drawText(dataIn, { x: 390, y: 684, size: tamanhoFonte, color: corPreta });
+            if(dataFim) pagina.drawText(dataFim, { x: 470, y: 684, size: tamanhoFonte, color: corPreta });
+            
+            if(saidaTexto) pagina.drawText(saidaTexto, { x: 80, y: 672, size: tamanhoFonte, color: corPreta });
+            if(chegadaTexto) pagina.drawText(chegadaTexto, { x: 90, y: 660, size: tamanhoFonte, color: corPreta });
+            if(custoTexto) pagina.drawText(custoTexto, { x: 200, y: 648, size: tamanhoFonte, color: corPreta });
 
             const pdfBytes = await pdfDoc.save();
             const blob = new Blob([pdfBytes], { type: "application/pdf" });
