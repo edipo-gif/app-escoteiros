@@ -104,7 +104,6 @@
         </div>
     </div>
 
-    <!-- Endereço -->
     <div class="form-group">
         <label>CEP (Opcional)</label>
         <div class="input-wrapper">
@@ -116,7 +115,7 @@
     <div class="form-group">
         <label>Logradouro</label>
         <div class="input-wrapper">
-            <input type="text" id="logradouro" placeholder="Nome da rua/avenida (Preenchimento automático via CEP)">
+            <input type="text" id="logradouro" placeholder="Rua/Avenida (Busca automática pelo CEP)">
             <button class="btn-clear-field" onclick="limparUmCampo('logradouro')">X</button>
         </div>
     </div>
@@ -170,7 +169,6 @@
         </div>
     </div>
 
-    <!-- Datas e Valores -->
     <div class="row">
         <div class="form-group">
             <label>Data Início</label>
@@ -264,21 +262,19 @@
         
         let local_linha_unica = '';
         if(cidade && uf) {
-            // Removido o tipo_logradouro da concatenação
             local_linha_unica = `${cidade}/${uf}, ${logradouro}, ${numero} - ${bairro} (${referencia}) - ${cidade.toUpperCase()}/${uf.toUpperCase()}`;
         }
         
         const dataIn = formatarData(document.getElementById('data_inicio').value);
         const dataFim = formatarData(document.getElementById('data_fim').value);
-        const periodo = (dataIn && dataFim) ? `${dataIn} e ${dataFim}` : '';
         
         const hSaida = document.getElementById('hora_saida').value;
         const hChegada = document.getElementById('hora_chegada').value;
-        const saida = (dataIn && hSaida) ? `${dataIn} ${hSaida} - Sede do Grupo` : '';
-        const chegada = (dataFim && hChegada) ? `${dataFim} ${hChegada} - Sede do grupo` : '';
+        const saidaTexto = (dataIn && hSaida) ? `${dataIn} ${hSaida} - Sede do Grupo` : '';
+        const chegadaTexto = (dataFim && hChegada) ? `${dataFim} ${hChegada} - Sede do grupo` : '';
         
         const custoValor = document.getElementById('custo').value;
-        const custo = custoValor ? `R$ ${custoValor}` : '';
+        const custoTexto = custoValor ? `R$ ${custoValor}` : '';
 
         try {
             const urlModelo = 'autorizacao_atividade.pdf'; 
@@ -290,21 +286,16 @@
             const tamanhoFonte = 10;
             const corPreta = PDFLib.rgb(0, 0, 0);
 
-            /* 
-               ATENÇÃO - CALIBRAGEM FINO: 
-               Subi os valores de Y consideravelmente para compensar o erro da imagem.
-               O eixo X move para direita (aumentar) ou esquerda (diminuir).
-               O eixo Y move para cima (aumentar) ou para baixo (diminuir).
-            */
-            if(atividade) pagina.drawText(atividade, { x: 95, y: 730, size: tamanhoFonte, color: corPreta });
-            if(local_linha_unica) pagina.drawText(local_linha_unica, { x: 95, y: 700, size: 9, color: corPreta });
+            // Coordenadas calculadas minuciosamente com base no teu último PDF gerado
+            if(atividade) pagina.drawText(atividade, { x: 50, y: 712, size: tamanhoFonte, color: corPreta });
+            if(local_linha_unica) pagina.drawText(local_linha_unica, { x: 130, y: 698, size: 9, color: corPreta });
             
-            // Período foi movido mais para a direita (X: 350) para encaixar na frase
-            if(periodo) pagina.drawText(periodo, { x: 350, y: 672, size: tamanhoFonte, color: corPreta });
+            if(dataIn) pagina.drawText(dataIn, { x: 410, y: 672, size: tamanhoFonte, color: corPreta });
+            if(dataFim) pagina.drawText(dataFim, { x: 490, y: 672, size: tamanhoFonte, color: corPreta });
             
-            if(saida) pagina.drawText(`Saída: ${saida}`, { x: 50, y: 658, size: tamanhoFonte, color: corPreta });
-            if(chegada) pagina.drawText(`Chegada: ${chegada}`, { x: 50, y: 642, size: tamanhoFonte, color: corPreta });
-            if(custo) pagina.drawText(custo, { x: 200, y: 628, size: tamanhoFonte, color: corPreta });
+            if(saidaTexto) pagina.drawText(saidaTexto, { x: 90, y: 660, size: tamanhoFonte, color: corPreta });
+            if(chegadaTexto) pagina.drawText(chegadaTexto, { x: 100, y: 648, size: tamanhoFonte, color: corPreta });
+            if(custoTexto) pagina.drawText(custoTexto, { x: 210, y: 636, size: tamanhoFonte, color: corPreta });
 
             const pdfBytes = await pdfDoc.save();
             const blob = new Blob([pdfBytes], { type: "application/pdf" });
@@ -325,7 +316,7 @@
             }
 
         } catch (erro) {
-            alert("Erro ao gerar o PDF. Verifique se o arquivo 'autorizacao_atividade.pdf' está na mesma pasta.");
+            alert("Erro ao gerar o PDF. Verifique se o ficheiro 'autorizacao_atividade.pdf' está na mesma pasta.");
             console.error(erro);
         }
     }
