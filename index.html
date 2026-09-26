@@ -1,0 +1,370 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>App Escoteiros - Sentinelas do Vale</title>
+    <!-- Importando a biblioteca para manipular PDFs -->
+    <script src="https://unpkg.com/pdf-lib@1.4.0/dist/pdf-lib.min.js"></script>
+    <style>
+        /* CSS: Estilos visuais da nossa aplicação */
+        :root {
+            --azul-escoteiro: #003366; 
+            --amarelo-escoteiro: #FFCC00; 
+            --fundo: #F4F7F6;
+        }
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: var(--fundo);
+            color: #333;
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            justify-content: center;
+        }
+        .container {
+            background-color: white;
+            padding: 30px;
+            border-radius: 12px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+            max-width: 500px;
+            width: 100%;
+        }
+        h2 {
+            color: var(--azul-escoteiro);
+            text-align: center;
+            border-bottom: 2px solid var(--amarelo-escoteiro);
+            padding-bottom: 10px;
+        }
+        .form-group {
+            margin-bottom: 15px;
+            width: 100%;
+        }
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+            font-size: 14px;
+            color: var(--azul-escoteiro);
+        }
+        /* Estrutura para colocar o "X" dentro do campo */
+        .input-wrapper {
+            position: relative;
+            display: flex;
+            align-items: center;
+        }
+        input[type="text"], input[type="date"], input[type="time"] {
+            width: 100%;
+            padding: 10px;
+            padding-right: 35px; /* Espaço para não encostar no X */
+            border: 1px solid #ccc;
+            border-radius: 6px;
+            box-sizing: border-box;
+            font-size: 14px;
+        }
+        /* Estilo do botão "X" individual */
+        .btn-clear-field {
+            position: absolute;
+            right: 5px;
+            background: none;
+            border: none;
+            color: #999;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+            padding: 5px;
+        }
+        .btn-clear-field:hover {
+            color: #e74c3c; /* Fica vermelho ao passar o mouse */
+        }
+        
+        .row { display: flex; gap: 10px; }
+        .row .form-group { flex: 1; }
+        
+        .botoes { display: flex; gap: 10px; margin-top: 20px; }
+        button {
+            flex: 1;
+            padding: 12px;
+            border: none;
+            border-radius: 6px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: 0.3s;
+        }
+        .btn-gerar { background-color: var(--azul-escoteiro); color: white; }
+        .btn-gerar:hover { background-color: #002244; }
+        .btn-limpar { background-color: #e74c3c; color: white; }
+        .btn-limpar:hover { background-color: #c0392b; }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h2>Autorização de Atividade</h2>
+    
+    <div class="form-group">
+        <label>Nome da Atividade Externa (Max 150 caracteres)</label>
+        <div class="input-wrapper">
+            <input type="text" id="atividade" maxlength="150" placeholder="Ex: Acampamento de Inverno">
+            <button class="btn-clear-field" onclick="limparUmCampo('atividade')">X</button>
+        </div>
+    </div>
+
+    <!-- Endereço -->
+    <div class="row">
+        <div class="form-group">
+            <label>CEP (Opcional)</label>
+            <div class="input-wrapper">
+                <input type="text" id="cep" placeholder="00000-000" onblur="buscarCEP()">
+                <button class="btn-clear-field" onclick="limparUmCampo('cep')">X</button>
+            </div>
+        </div>
+        <div class="form-group">
+            <label>Tipo Logradouro</label>
+            <div class="input-wrapper">
+                <input type="text" id="tipo_logradouro" placeholder="Ex: Av, Rua">
+                <button class="btn-clear-field" onclick="limparUmCampo('tipo_logradouro')">X</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="form-group">
+        <label>Logradouro</label>
+        <div class="input-wrapper">
+            <input type="text" id="logradouro" placeholder="Nome da rua/avenida">
+            <button class="btn-clear-field" onclick="limparUmCampo('logradouro')">X</button>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="form-group">
+            <label>Número</label>
+            <div class="input-wrapper">
+                <input type="text" id="numero">
+                <button class="btn-clear-field" onclick="limparUmCampo('numero')">X</button>
+            </div>
+        </div>
+        <div class="form-group">
+            <label>Complemento</label>
+            <div class="input-wrapper">
+                <input type="text" id="complemento">
+                <button class="btn-clear-field" onclick="limparUmCampo('complemento')">X</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="form-group">
+            <label>Bairro</label>
+            <div class="input-wrapper">
+                <input type="text" id="bairro">
+                <button class="btn-clear-field" onclick="limparUmCampo('bairro')">X</button>
+            </div>
+        </div>
+        <div class="form-group">
+            <label>Cidade</label>
+            <div class="input-wrapper">
+                <input type="text" id="cidade">
+                <button class="btn-clear-field" onclick="limparUmCampo('cidade')">X</button>
+            </div>
+        </div>
+        <div class="form-group">
+            <label>UF</label>
+            <div class="input-wrapper">
+                <input type="text" id="uf" maxlength="2">
+                <button class="btn-clear-field" onclick="limparUmCampo('uf')">X</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="form-group">
+        <label>Referência/Localização</label>
+        <div class="input-wrapper">
+            <input type="text" id="referencia" placeholder="Ex: Próximo à praça">
+            <button class="btn-clear-field" onclick="limparUmCampo('referencia')">X</button>
+        </div>
+    </div>
+
+    <!-- Datas e Valores -->
+    <div class="row">
+        <div class="form-group">
+            <label>Data Início</label>
+            <div class="input-wrapper">
+                <input type="date" id="data_inicio">
+                <button class="btn-clear-field" onclick="limparUmCampo('data_inicio')">X</button>
+            </div>
+        </div>
+        <div class="form-group">
+            <label>Data Fim</label>
+            <div class="input-wrapper">
+                <input type="date" id="data_fim">
+                <button class="btn-clear-field" onclick="limparUmCampo('data_fim')">X</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="form-group">
+            <label>Hora Saída</label>
+            <div class="input-wrapper">
+                <input type="time" id="hora_saida">
+                <button class="btn-clear-field" onclick="limparUmCampo('hora_saida')">X</button>
+            </div>
+        </div>
+        <div class="form-group">
+            <label>Hora Chegada</label>
+            <div class="input-wrapper">
+                <input type="time" id="hora_chegada">
+                <button class="btn-clear-field" onclick="limparUmCampo('hora_chegada')">X</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="form-group">
+        <label>Custo Individual (R$)</label>
+        <div class="input-wrapper">
+            <input type="text" id="custo" placeholder="28,57">
+            <button class="btn-clear-field" onclick="limparUmCampo('custo')">X</button>
+        </div>
+    </div>
+
+    <div class="botoes">
+        <button class="btn-limpar" onclick="limparTodosCampos()">Limpar Tudo</button>
+        <button class="btn-gerar" onclick="gerarPDF()">Gerar e Compartilhar PDF</button>
+    </div>
+</div>
+
+<script>
+    // Limpa um campo específico pelo seu ID
+    function limparUmCampo(idDoCampo) {
+        document.getElementById(idDoCampo).value = '';
+    }
+
+    // Limpa todos os campos da tela
+    function limparTodosCampos() {
+        const inputs = document.querySelectorAll('input');
+        inputs.forEach(input => input.value = '');
+    }
+
+    // Busca o endereço pelo CEP via API pública e gratuita
+    async function buscarCEP() {
+        let cep = document.getElementById('cep').value.replace(/\D/g, '');
+        if (cep.length === 8) {
+            try {
+                let response = await fetch(`https://viacep.com.br/ws/${cep}/json/`);
+                let data = await response.json();
+                if (!data.erro) {
+                    document.getElementById('logradouro').value = data.logradouro;
+                    document.getElementById('bairro').value = data.bairro;
+                    document.getElementById('cidade').value = data.localidade;
+                    document.getElementById('uf').value = data.uf;
+                }
+            } catch (error) {
+                console.log("Erro ao buscar CEP");
+            }
+        }
+    }
+
+    // Formata a data de YYYY-MM-DD para DD/MM/AAAA
+    function formatarData(dataISO) {
+        if(!dataISO) return '';
+        const partes = dataISO.split('-');
+        return `${partes[2]}/${partes[1]}/${partes[0]}`;
+    }
+
+    // Função principal: Gera o PDF apagando os dados velhos e escrevendo os novos
+    async function gerarPDF() {
+        const atividade = document.getElementById('atividade').value;
+        const cidade = document.getElementById('cidade').value || '';
+        const uf = document.getElementById('uf').value || '';
+        const tipo_logradouro = document.getElementById('tipo_logradouro').value || '';
+        const logradouro = document.getElementById('logradouro').value || '';
+        const numero = document.getElementById('numero').value || '';
+        const bairro = document.getElementById('bairro').value || '';
+        const referencia = document.getElementById('referencia').value || '';
+        
+        let local_linha_unica = '';
+        if(cidade && uf) {
+            local_linha_unica = `${cidade}/${uf}, ${tipo_logradouro} ${logradouro}, ${numero} - ${bairro} (${referencia}) - ${cidade.toUpperCase()}/${uf.toUpperCase()}`;
+        }
+        
+        const dataIn = formatarData(document.getElementById('data_inicio').value);
+        const dataFim = formatarData(document.getElementById('data_fim').value);
+        const periodo = (dataIn && dataFim) ? `${dataIn} e ${dataFim}` : '';
+        
+        const hSaida = document.getElementById('hora_saida').value;
+        const hChegada = document.getElementById('hora_chegada').value;
+        const saida = (dataIn && hSaida) ? `${dataIn} ${hSaida} - Sede do Grupo` : '';
+        const chegada = (dataFim && hChegada) ? `${dataFim} ${hChegada} - Sede do grupo` : '';
+        
+        const custoValor = document.getElementById('custo').value;
+        const custo = custoValor ? `R$ ${custoValor}` : '';
+
+        try {
+            // Carrega o PDF original que você tem na pasta
+            const urlModelo = 'autorizacao_atividade.pdf'; 
+            const modeloBytes = await fetch(urlModelo).then(res => res.arrayBuffer());
+            const pdfDoc = await PDFLib.PDFDocument.load(modeloBytes);
+            const paginas = pdfDoc.getPages();
+            const pagina = paginas[0]; // Trabalhando na primeira página
+
+            // FUNÇÃO CORRETIVO: Desenhando retângulos brancos por cima dos textos antigos
+            // Atenção: Os valores de X, Y, Width (Largura) e Height (Altura) são estimativas.
+            // Se o corretivo ficar torto no PDF final, nós ajustamos esses números depois!
+            const corBranca = PDFLib.rgb(1, 1, 1);
+            
+            // Apaga "Desfile Cívico..." (Ajuste o Y conforme a linha do seu PDF)
+            pagina.drawRectangle({ x: 40, y: 640, width: 500, height: 15, color: corBranca });
+            
+            // Apaga o Endereço longo
+            pagina.drawRectangle({ x: 40, y: 615, width: 500, height: 15, color: corBranca });
+            
+            // Apaga "07/09/2026 e 07/09/2026"
+            pagina.drawRectangle({ x: 180, y: 565, width: 200, height: 15, color: corBranca });
+            
+            // Apaga a Saída e Chegada
+            pagina.drawRectangle({ x: 40, y: 540, width: 300, height: 15, color: corBranca });
+            pagina.drawRectangle({ x: 40, y: 525, width: 300, height: 15, color: corBranca });
+            
+            // Apaga o Custo
+            pagina.drawRectangle({ x: 190, y: 500, width: 100, height: 15, color: corBranca });
+
+            // INJETANDO OS NOVOS TEXTOS (Nas mesmas posições onde passamos o corretivo)
+            const tamanhoFonte = 10;
+            const corPreta = PDFLib.rgb(0, 0, 0);
+
+            if(atividade) pagina.drawText(atividade, { x: 45, y: 642, size: tamanhoFonte, color: corPreta });
+            if(local_linha_unica) pagina.drawText(local_linha_unica, { x: 45, y: 617, size: 9, color: corPreta });
+            if(periodo) pagina.drawText(periodo, { x: 185, y: 567, size: tamanhoFonte, color: corPreta });
+            if(saida) pagina.drawText(`Saída: ${saida}`, { x: 45, y: 542, size: tamanhoFonte, color: corPreta });
+            if(chegada) pagina.drawText(`Chegada: ${chegada}`, { x: 45, y: 527, size: tamanhoFonte, color: corPreta });
+            if(custo) pagina.drawText(custo, { x: 195, y: 502, size: tamanhoFonte, color: corPreta });
+
+            // Salvando e processando o download/compartilhamento
+            const pdfBytes = await pdfDoc.save();
+            const blob = new Blob([pdfBytes], { type: "application/pdf" });
+            const arquivo = new File([blob], "Autorizacao_Preenchida.pdf", { type: "application/pdf" });
+
+            if (navigator.canShare && navigator.canShare({ files: [arquivo] })) {
+                await navigator.share({
+                    title: 'Autorização Escoteira',
+                    text: 'Segue a autorização gerada pelo nosso novo app!',
+                    files: [arquivo]
+                });
+            } else {
+                const urlBlob = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = urlBlob;
+                a.download = "Autorizacao_Preenchida.pdf";
+                a.click();
+            }
+
+        } catch (erro) {
+            alert("Erro ao gerar o PDF. Verifique se o arquivo 'autorizacao_atividade.pdf' está na mesma pasta.");
+            console.error(erro);
+        }
+    }
+</script>
+
+</body>
+</html>
