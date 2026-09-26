@@ -1,7 +1,7 @@
 // Service worker: permite instalar o app e usá-lo sem internet (ex.: no acampamento).
 // Estratégia "rede primeiro": com internet, sempre pega a versão mais nova do GitHub;
 // sem internet, usa a cópia salva no celular.
-const CACHE = 'sentinelas-v1';
+const CACHE = 'sentinelas-v2';
 const ARQUIVOS = [
     './',
     './index.html',
@@ -33,8 +33,10 @@ self.addEventListener('fetch', evento => {
     // Só guarda arquivos do próprio app (a busca de CEP sempre vai para a internet)
     if (req.method !== 'GET' || new URL(req.url).origin !== self.location.origin) return;
 
+    // cache: 'no-cache' faz o celular sempre conferir com o GitHub se há versão nova
+    // (sem isso, o navegador pode mostrar a versão antiga por até 10 minutos)
     evento.respondWith(
-        fetch(req)
+        fetch(req, { cache: 'no-cache' })
             .then(resposta => {
                 const copia = resposta.clone();
                 caches.open(CACHE).then(cache => cache.put(req, copia));
