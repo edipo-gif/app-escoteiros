@@ -4,10 +4,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>App Escoteiros - Sentinelas do Vale</title>
-    <!-- Importando a biblioteca para manipular PDFs -->
     <script src="https://unpkg.com/pdf-lib@1.4.0/dist/pdf-lib.min.js"></script>
     <style>
-        /* CSS: Estilos visuais da nossa aplicação */
         :root {
             --azul-escoteiro: #003366; 
             --amarelo-escoteiro: #FFCC00; 
@@ -75,10 +73,8 @@
         .btn-clear-field:hover {
             color: #e74c3c;
         }
-        
         .row { display: flex; gap: 10px; }
         .row .form-group { flex: 1; }
-        
         .botoes { display: flex; gap: 10px; margin-top: 20px; }
         button {
             flex: 1;
@@ -109,27 +105,18 @@
     </div>
 
     <!-- Endereço -->
-    <div class="row">
-        <div class="form-group">
-            <label>CEP (Opcional)</label>
-            <div class="input-wrapper">
-                <input type="text" id="cep" placeholder="00000-000" onblur="buscarCEP()">
-                <button class="btn-clear-field" onclick="limparUmCampo('cep')">X</button>
-            </div>
-        </div>
-        <div class="form-group">
-            <label>Tipo Logradouro</label>
-            <div class="input-wrapper">
-                <input type="text" id="tipo_logradouro" placeholder="Ex: Av, Rua">
-                <button class="btn-clear-field" onclick="limparUmCampo('tipo_logradouro')">X</button>
-            </div>
+    <div class="form-group">
+        <label>CEP (Opcional)</label>
+        <div class="input-wrapper">
+            <input type="text" id="cep" placeholder="00000-000" onblur="buscarCEP()">
+            <button class="btn-clear-field" onclick="limparUmCampo('cep')">X</button>
         </div>
     </div>
 
     <div class="form-group">
         <label>Logradouro</label>
         <div class="input-wrapper">
-            <input type="text" id="logradouro" placeholder="Nome da rua/avenida">
+            <input type="text" id="logradouro" placeholder="Nome da rua/avenida (Preenchimento automático via CEP)">
             <button class="btn-clear-field" onclick="limparUmCampo('logradouro')">X</button>
         </div>
     </div>
@@ -233,18 +220,15 @@
 </div>
 
 <script>
-    // Limpa um campo específico pelo seu ID
     function limparUmCampo(idDoCampo) {
         document.getElementById(idDoCampo).value = '';
     }
 
-    // Limpa todos os campos da tela
     function limparTodosCampos() {
         const inputs = document.querySelectorAll('input');
         inputs.forEach(input => input.value = '');
     }
 
-    // Busca o endereço pelo CEP via API pública e gratuita
     async function buscarCEP() {
         let cep = document.getElementById('cep').value.replace(/\D/g, '');
         if (cep.length === 8) {
@@ -263,19 +247,16 @@
         }
     }
 
-    // Formata a data de YYYY-MM-DD para DD/MM/AAAA
     function formatarData(dataISO) {
         if(!dataISO) return '';
         const partes = dataISO.split('-');
         return `${partes[2]}/${partes[1]}/${partes[0]}`;
     }
 
-    // Função principal otimizada: Gera o PDF escrevendo os novos textos diretamente
     async function gerarPDF() {
         const atividade = document.getElementById('atividade').value;
         const cidade = document.getElementById('cidade').value || '';
         const uf = document.getElementById('uf').value || '';
-        const tipo_logradouro = document.getElementById('tipo_logradouro').value || '';
         const logradouro = document.getElementById('logradouro').value || '';
         const numero = document.getElementById('numero').value || '';
         const bairro = document.getElementById('bairro').value || '';
@@ -283,7 +264,8 @@
         
         let local_linha_unica = '';
         if(cidade && uf) {
-            local_linha_unica = `${cidade}/${uf}, ${tipo_logradouro} ${logradouro}, ${numero} - ${bairro} (${referencia}) - ${cidade.toUpperCase()}/${uf.toUpperCase()}`;
+            // Removido o tipo_logradouro da concatenação
+            local_linha_unica = `${cidade}/${uf}, ${logradouro}, ${numero} - ${bairro} (${referencia}) - ${cidade.toUpperCase()}/${uf.toUpperCase()}`;
         }
         
         const dataIn = formatarData(document.getElementById('data_inicio').value);
@@ -299,26 +281,31 @@
         const custo = custoValor ? `R$ ${custoValor}` : '';
 
         try {
-            // Carrega o seu novo PDF limpo que está no GitHub
             const urlModelo = 'autorizacao_atividade.pdf'; 
             const modeloBytes = await fetch(urlModelo).then(res => res.arrayBuffer());
             const pdfDoc = await PDFLib.PDFDocument.load(modeloBytes);
             const paginas = pdfDoc.getPages();
             const pagina = paginas[0]; 
 
-            // Como o PDF já está em branco nas áreas corretas, vamos apenas desenhar o texto!
-            // Mantive as coordenadas que tínhamos calculado antes.
             const tamanhoFonte = 10;
             const corPreta = PDFLib.rgb(0, 0, 0);
 
-            if(atividade) pagina.drawText(atividade, { x: 45, y: 642, size: tamanhoFonte, color: corPreta });
-            if(local_linha_unica) pagina.drawText(local_linha_unica, { x: 45, y: 617, size: 9, color: corPreta });
-            if(periodo) pagina.drawText(periodo, { x: 185, y: 567, size: tamanhoFonte, color: corPreta });
-            if(saida) pagina.drawText(`Saída: ${saida}`, { x: 45, y: 542, size: tamanhoFonte, color: corPreta });
-            if(chegada) pagina.drawText(`Chegada: ${chegada}`, { x: 45, y: 527, size: tamanhoFonte, color: corPreta });
-            if(custo) pagina.drawText(custo, { x: 195, y: 502, size: tamanhoFonte, color: corPreta });
+            /* 
+               ATENÇÃO - CALIBRAGEM FINO: 
+               Subi os valores de Y consideravelmente para compensar o erro da imagem.
+               O eixo X move para direita (aumentar) ou esquerda (diminuir).
+               O eixo Y move para cima (aumentar) ou para baixo (diminuir).
+            */
+            if(atividade) pagina.drawText(atividade, { x: 95, y: 730, size: tamanhoFonte, color: corPreta });
+            if(local_linha_unica) pagina.drawText(local_linha_unica, { x: 95, y: 700, size: 9, color: corPreta });
+            
+            // Período foi movido mais para a direita (X: 350) para encaixar na frase
+            if(periodo) pagina.drawText(periodo, { x: 350, y: 672, size: tamanhoFonte, color: corPreta });
+            
+            if(saida) pagina.drawText(`Saída: ${saida}`, { x: 50, y: 658, size: tamanhoFonte, color: corPreta });
+            if(chegada) pagina.drawText(`Chegada: ${chegada}`, { x: 50, y: 642, size: tamanhoFonte, color: corPreta });
+            if(custo) pagina.drawText(custo, { x: 200, y: 628, size: tamanhoFonte, color: corPreta });
 
-            // Salvando e processando o download/compartilhamento
             const pdfBytes = await pdfDoc.save();
             const blob = new Blob([pdfBytes], { type: "application/pdf" });
             const arquivo = new File([blob], "Autorizacao_Preenchida.pdf", { type: "application/pdf" });
