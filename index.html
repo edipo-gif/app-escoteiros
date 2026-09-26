@@ -47,7 +47,6 @@
             font-size: 14px;
             color: var(--azul-escoteiro);
         }
-        /* Estrutura para colocar o "X" dentro do campo */
         .input-wrapper {
             position: relative;
             display: flex;
@@ -56,13 +55,12 @@
         input[type="text"], input[type="date"], input[type="time"] {
             width: 100%;
             padding: 10px;
-            padding-right: 35px; /* Espaço para não encostar no X */
+            padding-right: 35px;
             border: 1px solid #ccc;
             border-radius: 6px;
             box-sizing: border-box;
             font-size: 14px;
         }
-        /* Estilo do botão "X" individual */
         .btn-clear-field {
             position: absolute;
             right: 5px;
@@ -75,7 +73,7 @@
             padding: 5px;
         }
         .btn-clear-field:hover {
-            color: #e74c3c; /* Fica vermelho ao passar o mouse */
+            color: #e74c3c;
         }
         
         .row { display: flex; gap: 10px; }
@@ -272,7 +270,7 @@
         return `${partes[2]}/${partes[1]}/${partes[0]}`;
     }
 
-    // Função principal: Gera o PDF apagando os dados velhos e escrevendo os novos
+    // Função principal otimizada: Gera o PDF escrevendo os novos textos diretamente
     async function gerarPDF() {
         const atividade = document.getElementById('atividade').value;
         const cidade = document.getElementById('cidade').value || '';
@@ -301,35 +299,15 @@
         const custo = custoValor ? `R$ ${custoValor}` : '';
 
         try {
-            // Carrega o PDF original que você tem na pasta
+            // Carrega o seu novo PDF limpo que está no GitHub
             const urlModelo = 'autorizacao_atividade.pdf'; 
             const modeloBytes = await fetch(urlModelo).then(res => res.arrayBuffer());
             const pdfDoc = await PDFLib.PDFDocument.load(modeloBytes);
             const paginas = pdfDoc.getPages();
-            const pagina = paginas[0]; // Trabalhando na primeira página
+            const pagina = paginas[0]; 
 
-            // FUNÇÃO CORRETIVO: Desenhando retângulos brancos por cima dos textos antigos
-            // Atenção: Os valores de X, Y, Width (Largura) e Height (Altura) são estimativas.
-            // Se o corretivo ficar torto no PDF final, nós ajustamos esses números depois!
-            const corBranca = PDFLib.rgb(1, 1, 1);
-            
-            // Apaga "Desfile Cívico..." (Ajuste o Y conforme a linha do seu PDF)
-            pagina.drawRectangle({ x: 40, y: 640, width: 500, height: 15, color: corBranca });
-            
-            // Apaga o Endereço longo
-            pagina.drawRectangle({ x: 40, y: 615, width: 500, height: 15, color: corBranca });
-            
-            // Apaga "07/09/2026 e 07/09/2026"
-            pagina.drawRectangle({ x: 180, y: 565, width: 200, height: 15, color: corBranca });
-            
-            // Apaga a Saída e Chegada
-            pagina.drawRectangle({ x: 40, y: 540, width: 300, height: 15, color: corBranca });
-            pagina.drawRectangle({ x: 40, y: 525, width: 300, height: 15, color: corBranca });
-            
-            // Apaga o Custo
-            pagina.drawRectangle({ x: 190, y: 500, width: 100, height: 15, color: corBranca });
-
-            // INJETANDO OS NOVOS TEXTOS (Nas mesmas posições onde passamos o corretivo)
+            // Como o PDF já está em branco nas áreas corretas, vamos apenas desenhar o texto!
+            // Mantive as coordenadas que tínhamos calculado antes.
             const tamanhoFonte = 10;
             const corPreta = PDFLib.rgb(0, 0, 0);
 
